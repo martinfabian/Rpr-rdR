@@ -2,5 +2,10 @@
 <resources>
 
     <string name="app_name">Rpr rdR</string>
+    <string name="quit">Quit</string>
+    <string name="really_quit">Really quit?</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    
 
 </resources>
