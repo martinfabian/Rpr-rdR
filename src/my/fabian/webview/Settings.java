@@ -25,10 +25,11 @@ public class Settings
 	
 	// These are taken directly from view-source:http://forum.cockos.com/
 	public static final String BACKGROUND = "#ABB8B8";	
+	public static final int BGCOLOR = 0xFFABB8B8;
 	public static final String BODY = "body { background: #ABB8B8; color: #000000; font-size:" + FONTSIZE + "; }";	
 	public static final String ALINK = "a:link, body_alink { color: #000000; text-decoration:" + DECORATION + "; }";
 	public static final String TDTHPLI = "td, th, p, li { font:" + FONTSIZE + "verdana, geneva, lucida, 'lucida grande', arial, helvetica, sans-serif; }";
-	public static final URL LOGO = new URL("http://www.cockos.com/reaper/siteimages/forum-head-r.jpg");
+	public static final String LOGO = "http://www.cockos.com/reaper/siteimages/forum-head-r.jpg";
 	
 	public static final String TD = "td { font-size:8pt; font-family:Arial;}"; 	// my own, seems TDTHPLI doesn't work...
 	public static final String TAG = "MF";

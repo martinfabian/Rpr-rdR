@@ -73,12 +73,15 @@ public class FilterX extends AsyncTask<Void, String, File>
 	 */
 	private StringBuilder manageTopState(Document doc)
 	{
-		Elements links = doc.select("a[href]");	// select all links like <A HREF=
-		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bordercolor=\"grey\">");
+		Elements links = doc.select("a[href*=" + Settings.FORUMTAG + "]");	// select all links like <A HREF= containing FORUMTAG
+		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bgcolor=\"white\" bordercolor=\"black\">");
 		for (org.jsoup.nodes.Element link : links) 
 		{
-			if(!link.text().isEmpty() && link.attr("href").contains(Settings.FORUMTAG))
-				builder.append(String.format("<tr><td><A HREF=\"%s\">%s</A></td></tr>", link.attr("abs:href"), trim(link.text(), Settings.TEXTWIDTH)));
+			//if(!link.text().isEmpty() && link.attr("href").contains(Settings.FORUMTAG))
+			{
+				builder.append(String.format("<tr><td><A HREF=\"%s\">%s</A></td></tr>", link.attr("abs:href"), trim(link.text(), Settings.TEXTWIDTH)));				
+			}
+
 		}
 		builder.append("</table></body></html>");
 		

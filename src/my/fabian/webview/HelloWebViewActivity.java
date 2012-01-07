@@ -24,6 +24,12 @@ public class HelloWebViewActivity extends Activity
 	    	HelloWebViewActivity.this.fetch(view, url);
 	        return true;
 	    }
+	    
+	    @Override
+	    public void onLoadResource (WebView view, String url)
+	    {
+	    	Log.i(Settings.TAG, "onLoadResource: " + url);
+	    }
 	}
 	
 	public void fetch(WebView view, String url)
@@ -55,7 +61,9 @@ public class HelloWebViewActivity extends Activity
 //    	 
         webview = (WebView) findViewById(R.id.webview);
         webview.setWebViewClient(new HelloWebViewClient());
-
+        webview.setBackgroundColor(Settings.BGCOLOR);
+        webview.loadUrl(Settings.LOGO);
+        
         fetch(webview, Settings.FORUM);
     }
     
