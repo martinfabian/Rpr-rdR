@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Window;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -39,6 +40,10 @@ public class HelloWebViewActivity extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS); 
+        setProgressBarIndeterminateVisibility(false);
+        
         setContentView(R.layout.main);
         
     	// This is ugly hack for now, should use AsyncThread
@@ -61,6 +66,8 @@ public class HelloWebViewActivity extends Activity
         {	
         	if(webview.canGoBack()) 
 	        {
+        		// TODO: don't forget to change the app title!
+        		
 	            webview.goBack();
 	            return true;
 	        }
