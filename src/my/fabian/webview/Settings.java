@@ -9,7 +9,6 @@ import java.net.URL;
 public class Settings
 {
 	public static final String FORUM = "http://forum.cockos.com";
-	public static final int[] BANNED = {6, 8, 12, 20, 38, };
 	
 	public static enum FORUM_STATE {TOP, THREAD, POST};
 	public static FORUM_STATE forum_state = FORUM_STATE.TOP;
@@ -18,10 +17,12 @@ public class Settings
 	public static final String THREADTAG = "showthread";
 	public static final String POSTTAG = "<div id=\"post_message_";
 	
+	public static final String ERROR = "<html><body><h3>404 Not found</h3><BR>or some other silly error, sorry...<p style=\"font-size:60%\"><small><b>Rpr-rdR</B> by M Fabian 2011</p></body></html>";
+	
 	public static final String FONTSIZE = "8pt";
 	public static final String DECORATION = "none";
 	
-	public static final int TEXTWIDTH = 35;	// governs the truncation length of too long link tags
+	public static final int TEXTWIDTH = 50;	// governs the truncation length of too long link tags
 	
 	// These are taken directly from view-source:http://forum.cockos.com/
 	public static final String BACKGROUND = "#ABB8B8";	

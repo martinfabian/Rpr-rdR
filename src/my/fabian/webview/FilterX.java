@@ -64,7 +64,6 @@ public class FilterX extends AsyncTask<Void, String, File>
 		Log.i(Settings.TAG, "State: " + Settings.forum_state.toString());
 	}
 	
-
 	/*
 	 * TOP: On http://forum.cockos.com/ we should only show non-empty links containing "forumdisplay"
 	 * THREAD: On http://forum.cockos.com/forumdisplay.php?f=xx we should only show non-empty links containing "showthread"
@@ -73,14 +72,16 @@ public class FilterX extends AsyncTask<Void, String, File>
 	 */
 	private StringBuilder manageTopState(Document doc)
 	{
-		Elements links = doc.select("a[href*=" + Settings.FORUMTAG + "]");	// select all links like <A HREF= containing FORUMTAG
+		Elements tds = doc.select("td[class=alt1Active]");	// select all elements like <td class="alt1Active"
+		
 		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bgcolor=\"white\" bordercolor=\"black\">");
-		for (org.jsoup.nodes.Element link : links) 
+		for(org.jsoup.nodes.Element td : tds) 
 		{
-			//if(!link.text().isEmpty() && link.attr("href").contains(Settings.FORUMTAG))
-			{
-				builder.append(String.format("<tr><td><A HREF=\"%s\">%s</A></td></tr>", link.attr("abs:href"), trim(link.text(), Settings.TEXTWIDTH)));				
-			}
+			Elements forumlink = td.select("a[href]");
+			Elements undertext = td.select("div[class=smallfont]");
+			
+			builder.append(String.format("<tr><td><A HREF=\"%s\">%s<br>", forumlink.attr("abs:href"), trim(forumlink.text(), Settings.TEXTWIDTH)));
+			builder.append(String.format("<small>%s</small></A></td></tr>", undertext.text()));
 
 		}
 		builder.append("</table></body></html>");
@@ -89,12 +90,38 @@ public class FilterX extends AsyncTask<Void, String, File>
 	}
 	private StringBuilder manageThreadState(Document doc)
 	{
-		return manageTopState(doc);	//*** for now
+		Elements threads = doc.select("a[id*=thread_title]");
+		
+		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bgcolor=\"white\" bordercolor=\"black\">");
+		for(org.jsoup.nodes.Element threadlink : threads)
+		{
+			builder.append("<tr><td><A HREF=\"" + threadlink.attr("abs:href") + "\">" + trim(threadlink.text(), Settings.TEXTWIDTH) + "</A></td></tr>");
+		}
+		builder.append("</table></body></html>");
+		
+		return builder;
 	}
 	
 	private StringBuilder managePostState(Document doc)
 	{
-		return manageTopState(doc);	//*** for now
+		Elements posts = doc.select("table[id*=post]");	// each post is a table of its own
+		
+		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bgcolor=\"white\" bordercolor=\"black\">");
+		for(org.jsoup.nodes.Element post : posts)
+		{
+			Elements user = post.select("a[class=bigusername]");	// the href here points to the user
+			Elements td = post.select("td[id*=td_post");			// this holds the title and the posted text
+			Elements title = td.first().select("div[class=smallfont]");	// this gets the title
+			Elements words = post.select("div[id*=post_message]");	// this is the posted text, could as well used td.first().select
+			
+			builder.append("<tr><td>");
+			if(!title.first().text().isEmpty())
+				builder.append("<strong>" + trim(title.first().text(), Settings.TEXTWIDTH) + "</strong><br>");
+			builder.append("<small><strong><A HREF=\"" + user.attr("abs:href") + "\">" + trim(user.text(), Settings.TEXTWIDTH) + "</A></strong></small></p><p><small>" + words.first().html() + "</small></p></td></tr>");
+		}
+		builder.append("</table></body></html>");
+		
+		return builder;
 	}
 	
 	@Override
@@ -106,7 +133,7 @@ public class FilterX extends AsyncTask<Void, String, File>
 			Log.i(Settings.TAG, "Title: " + doc.title());
 			publishProgress(doc.title());	// clever(?) hack here to set the app title
 			
-			StringBuilder builder = new StringBuilder("<html><body><h3>404 Not found</h3><BR>or some other silly error, sorry...</body></html>");
+			StringBuilder builder = new StringBuilder(Settings.ERROR);
 			
 			switch(Settings.forum_state)
 			{
