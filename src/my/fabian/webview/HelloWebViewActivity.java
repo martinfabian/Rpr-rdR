@@ -1,21 +1,37 @@
 package my.fabian.webview;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.Window;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 public class HelloWebViewActivity extends Activity
 {	
 	WebView webview;
 	ProgressBar progressbar;
 	
+	@Override
+	public File getExternalFilesDir(final String type)
+	{
+		File path = super.getExternalFilesDir(type);
+		// Should extend the path with "RprrdR" + File.separator -- but I don't know how just yet
+		// The reason is to be able to remove all files when the app is stopped, by just removing the RprrdR folder
+		return path;
+		
+	}
 	private class HelloWebViewClient extends WebViewClient 
 	{
 	    @Override
@@ -36,7 +52,7 @@ public class HelloWebViewActivity extends Activity
 	{
     	Log.i(Settings.TAG, "URL: " + url);
     	
-    	FilterX fx = new FilterX(url, view, this);
+    	AsyncTask<Void, String, File> fx = Settings.USE_XY ? new FilterX(url, view, this) : new FilterY(url, view, this);
         // progressbar.setVisibility(ProgressBar.VISIBLE);
     	fx.execute();
 	}
@@ -96,7 +112,15 @@ public class HelloWebViewActivity extends Activity
 	                    }
 
 	                })
-	                .setNegativeButton(R.string.no, null)
+	                .setNegativeButton(R.string.no, new DialogInterface.OnClickListener()
+	                {
+	                	@Override
+	                	public void onClick(DialogInterface dialog, int which)
+	                	{
+	                		// Go home, i.e. to the FORUM
+	                		fetch(webview, Settings.FORUM);
+	                	}
+	                })
 	                .show();
 
 	                return true;
@@ -104,4 +128,43 @@ public class HelloWebViewActivity extends Activity
          }
         return super.onKeyDown(keyCode, event);
     }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        menu.setGroupVisible(R.id.layout_group, true);
+        menu.setGroupEnabled(R.id.layout_group, true);
+        menu.setGroupCheckable(R.id.layout_group, true, true);
+        if(Settings.USE_XY)
+        {
+        	menu.findItem(R.id.minimalistic).setChecked(true);	// DO NOT use getItem here, index an did are very different things!
+        }														// Some stupid f*** at google apparently had too much to think...
+        else
+        {
+        	menu.findItem(R.id.stripped).setChecked(true);
+        }
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+        	case R.id.minimalistic:	Toast.makeText(this, R.string.minimalistic, Toast.LENGTH_SHORT).show();
+        							Settings.USE_XY = true;
+        							item.setChecked(true);
+        							break;
+        	case R.id.stripped:		Toast.makeText(this, R.string.stripped, Toast.LENGTH_SHORT).show();
+        							Settings.USE_XY = false;
+        							item.setChecked(true);
+        							break;
+        	case R.id.forum_home:	fetch(webview, Settings.FORUM);
+        							break;
+        }
+		
+        return true;
+    }
+ 
 }

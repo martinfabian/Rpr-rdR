@@ -7,5 +7,7 @@
     <string name="no">No</string>
     <string name="yes">Yes</string>
     
+    <string name="stripped">Stripped</string>
+    <string name="minimalistic">Minimalistic</string>
 
 </resources>

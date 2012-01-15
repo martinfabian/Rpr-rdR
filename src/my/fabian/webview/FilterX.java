@@ -41,7 +41,7 @@ public class FilterX extends AsyncTask<Void, String, File>
 	WebView the_view = null;
 	ProgressDialog the_dialog = null;
 	long timing = 0;
-	
+
 	private static String trim(String s, int width) 
 	{
         if (s.length() > width)
@@ -49,38 +49,44 @@ public class FilterX extends AsyncTask<Void, String, File>
         else
             return s;
 	}
-	
+
+//	FilterX(final String url)
+//	{
+//		this(url, new WebView(), new Activity());
+//	}
 	FilterX(final String url, final WebView view, final Activity activity) 
 	{
 		the_url = url; 
 		the_view = view;
 		the_activity = activity;
 		
-		// If the url doesn't contain a FORUMTAG or a THREADTAG, then it is the TOP url (right?)
+		// If the url doesn't contain a FORUMTAG, THREADTAG or PROJECTTAG, then it is the TOP url (right?)
 		Settings.forum_state = Settings.FORUM_STATE.TOP;	
-		if(the_url.contains(Settings.FORUMTAG)) Settings.forum_state = Settings.FORUM_STATE.THREAD;
-		else if(the_url.contains(Settings.THREADTAG)) Settings.forum_state = Settings.FORUM_STATE.POST;
+		if(the_url.contains(Settings.FORUMTAG)) Settings.forum_state = Settings.FORUM_STATE.THREADS;
+		else if(the_url.contains(Settings.THREADTAG)) Settings.forum_state = Settings.FORUM_STATE.POSTS;
+		else if(the_url.contains(Settings.PROJECTTAG)) Settings.forum_state = Settings.FORUM_STATE.PROJECT;
 		
 		Log.i(Settings.TAG, "State: " + Settings.forum_state.toString());
 	}
 	
 	/*
 	 * TOP: On http://forum.cockos.com/ we should only show non-empty links containing "forumdisplay"
-	 * THREAD: On http://forum.cockos.com/forumdisplay.php?f=xx we should only show non-empty links containing "showthread"
-	 * POST: On http://forum.cockos.com/showthread.php?t=xxxxx we should only show... what? Messages are embedded within <div id="post_message_xxxx"> </div> 
+	 * THREADS: On http://forum.cockos.com/forumdisplay.php?f=xx we should only show non-empty links containing "showthread"
+	 * POSTS: On http://forum.cockos.com/showthread.php?t=xxxxx we should only show... what? Messages are embedded within <div id="post_message_xxxx"> </div> 
 	 * 																				Poster name is found within <div id="postmenu_xxx"> </div>
 	 */
-	private StringBuilder manageTopState(Document doc)
+	private HtmlStringBuilder manageTopState(Document doc)
 	{
-		Elements tds = doc.select("td[class=alt1Active]");	// select all elements like <td class="alt1Active"
+		HtmlStringBuilder builder = new HtmlStringBuilder();
 		
-		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bgcolor=\"white\" bordercolor=\"black\">");
+		Elements tds = doc.select("td[class=alt1Active]");	// select all elements like <td class="alt1Active"
 		for(org.jsoup.nodes.Element td : tds) 
 		{
 			Elements forumlink = td.select("a[href]");
 			Elements undertext = td.select("div[class=smallfont]");
 			
-			builder.append(String.format("<tr><td><A HREF=\"%s\">%s<br>", forumlink.attr("abs:href"), trim(forumlink.text(), Settings.TEXTWIDTH)));
+			builder.append(String.format("<tr><td><A HREF=\"%s\">%s<br>", forumlink.attr("abs:href"), trim(forumlink.first().text(), Settings.TEXTWIDTH)));
+																		// Note Jsoup anomaly here, Elements::attr retruns for the first, Elements::text returns for *all*
 			builder.append(String.format("<small>%s</small></A></td></tr>", undertext.text()));
 
 		}
@@ -88,27 +94,65 @@ public class FilterX extends AsyncTask<Void, String, File>
 		
 		return builder;
 	}
-	private StringBuilder manageThreadState(Document doc)
-	{
+	private HtmlStringBuilder manageThreadState(Document doc)
+	{	
+		HtmlStringBuilder builder = new HtmlStringBuilder();
+
 		Elements threads = doc.select("a[id*=thread_title]");
-		
-		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bgcolor=\"white\" bordercolor=\"black\">");
+		// Log.i(Settings.TAG, threads.first().parent().parent().parent().outerHtml()); // from here we can get statusicon (tells us if the thread is hot or not)
+																						// and the number of replies
 		for(org.jsoup.nodes.Element threadlink : threads)
 		{
-			builder.append("<tr><td><A HREF=\"" + threadlink.attr("abs:href") + "\">" + trim(threadlink.text(), Settings.TEXTWIDTH) + "</A></td></tr>");
+			// Log.i(Settings.TAG, threadlink.outerHtml());	// Why is the style="..." stripped?
+			org.jsoup.nodes.Element gg_parent = threadlink.parent().parent().parent();
+			org.jsoup.nodes.Element staticon = gg_parent.select("img[id*=statusicon").first();	// thread_hot_new.gif and thread_new.gif make style bold (workaround for Jsoup not recognizing the style attribute
+			Log.i(Settings.TAG, staticon.attr("src"));
+			
+			builder.append("<tr><td width=\"90%\"><A HREF=\"").append(threadlink.attr("abs:href")).append("\" ");
+			
+			// builder.append("style=\"").append(threadlink.attr("style")).append("\"");	// does not work Jsoup strips the style attr
+			if(staticon.attr("src").contains("hot"))	// instead we have to do this
+			{	
+				builder.append("style=\"font-weight:bold\"");
+			}
+			builder.append(">");
+			builder.append(trim(threadlink.text(), Settings.TEXTWIDTH));
+			builder.append("</A></td>");
+			builder.append("<td class=\"alt2\">").append(gg_parent.select("a[href*=whoposted]").first().text()).append("</td>"); // number of replies
+			builder.append("</tr>");
 		}
+		builder.appendNavigator(doc);
 		builder.append("</table></body></html>");
 		
 		return builder;
 	}
 	
-	private StringBuilder managePostState(Document doc)
+	private Elements makeAbsolute(Elements elems)
 	{
-		Elements posts = doc.select("table[id*=post]");	// each post is a table of its own
+		for(org.jsoup.nodes.Element elem : elems)
+		{
+			// Need a better way of making absolute, this is seriously inefficient!
+			Elements srcs = elem.select("img[src]");
+			for(org.jsoup.nodes.Element src : srcs)
+			{
+				src.attr("src", src.attr("abs:src"));
+			}
+			Elements hrefs = elem.select("a[href]");
+			for(org.jsoup.nodes.Element href : hrefs)
+			{
+				href.attr("href", href.attr("abs:href"));
+			}
+		}
+		return elems;
+	}
+	private HtmlStringBuilder managePostState(Document doc)
+	{
+		HtmlStringBuilder builder = new HtmlStringBuilder();
 		
-		StringBuilder builder = new StringBuilder("<html><head><style type=\"text/css\"><!--" + Settings.BODY + Settings.ALINK + Settings.TD + "---></style></head><body><table width=\"100%\" frame=\"box\" rules=\"rows\" bgcolor=\"white\" bordercolor=\"black\">");
+		Elements posts = doc.select("table[id*=post]");	// each post is a table of its own
 		for(org.jsoup.nodes.Element post : posts)
 		{
+			org.jsoup.nodes.Element datetd = post.select("td").first();	// the first td holds teh date
 			Elements user = post.select("a[class=bigusername]");	// the href here points to the user
 			Elements td = post.select("td[id*=td_post");			// this holds the title and the posted text
 			Elements title = td.first().select("div[class=smallfont]");	// this gets the title
@@ -116,15 +160,25 @@ public class FilterX extends AsyncTask<Void, String, File>
 			
 			builder.append("<tr><td>");
 			if(!title.first().text().isEmpty())
-				builder.append("<strong>" + trim(title.first().text(), Settings.TEXTWIDTH) + "</strong><br>");
-			builder.append("<small><strong><A HREF=\"" + user.attr("abs:href") + "\">" + trim(user.text(), Settings.TEXTWIDTH) + "</A></strong></small></p><p><small>" + words.first().html() + "</small></p></td></tr>");
+				builder.append("<strong>").append(trim(title.first().text(), Settings.TEXTWIDTH)).append("</strong><br>");
+			builder.append("<small><strong><A HREF=\"");
+			builder.append(user.attr("abs:href")).append("\">");
+			builder.append(trim(user.text(), Settings.TEXTWIDTH)).append("</A></strong> - ");
+			builder.append(datetd.text()).append("</small></p><p><small>");
+			
+			builder.append(makeAbsolute(words).first().html()).append("</small></p></td></tr>");
 		}
+		
+		builder.appendNavigator(doc);
 		builder.append("</table></body></html>");
 		
 		return builder;
 	}
-	
-	@Override
+	private HtmlStringBuilder manageProjectState(Document doc)
+	{
+		return new HtmlStringBuilder("Issue Tracker not supported yet, sorry...");
+	}
+	//@Override
 	protected File doInBackground(Void... v)
 	{
 		try
@@ -133,22 +187,27 @@ public class FilterX extends AsyncTask<Void, String, File>
 			Log.i(Settings.TAG, "Title: " + doc.title());
 			publishProgress(doc.title());	// clever(?) hack here to set the app title
 			
-			StringBuilder builder = new StringBuilder(Settings.ERROR);
+			HtmlStringBuilder builder = new HtmlStringBuilder(Settings.ERROR);
 			
 			switch(Settings.forum_state)
 			{
 				case TOP:	// Cannot have Settings.FORUM_STATE.TOP here? amazing...
 					builder = manageTopState(doc);
 					break;
-				case THREAD:
+				case THREADS:
 					builder = manageThreadState(doc);
 					break;
-				case POST:
+				case POSTS:
 					builder = managePostState(doc);
+					break;
+				case PROJECT:
+					builder = manageProjectState(doc);
 					break;
 				default:
 					Log.e(Settings.TAG, "Switch error that cannot occur!");
 			}
+			
+			builder.insertTitle(doc.title());
 			
 			URI geller = new URI(the_url);	// using URI instead of URL because of hashCode (see http://www.eishay.com/2008/04/javas-url-little-secret.html)
 			int hashcode = geller.hashCode();
@@ -168,20 +227,17 @@ public class FilterX extends AsyncTask<Void, String, File>
         catch(Exception excp)
         {
         	Log.e(Settings.TAG, "Exception!", excp);
-        	excp.printStackTrace();
         	return null;	// Should return file that says something about error
         }
 	}
 	
-	@Override
+	//@Override
 	protected void onPreExecute()
 	{
 		timing = System.currentTimeMillis();
 		
 		the_activity.setProgressBarIndeterminateVisibility(true);
 		
-		// the_bar.setIndeterminate(true);
-		// the_bar.setVisibility(ProgressBar.VISIBLE);
 		the_dialog = new ProgressDialog(the_activity);
 		the_dialog.setMessage("Loading...");
 		the_dialog.setIndeterminate(true);
@@ -189,7 +245,7 @@ public class FilterX extends AsyncTask<Void, String, File>
 		the_dialog.show();
 	}
 
-	@Override
+	//@Override
 	protected void onPostExecute(File file)
 	{
 		the_view.loadUrl("file://" + file.getAbsolutePath());
@@ -203,8 +259,7 @@ public class FilterX extends AsyncTask<Void, String, File>
 		timing = System.currentTimeMillis() - timing;
 		Log.i(Settings.TAG, "Timing: " + timing + " ms");
 	}
-	
-	@Override
+	//@Override
 	protected void onProgressUpdate(String... strings)
 	{
 		the_activity.setTitle(strings[0]);	// clever(?) hack here to set the app title (to change size etc http://labs.makemachine.net/2010/03/custom-android-window-title/ and 
@@ -215,4 +270,5 @@ public class FilterX extends AsyncTask<Void, String, File>
 	{
 		return the_file;
 	}
+
 }
