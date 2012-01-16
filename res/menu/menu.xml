@@ -1,0 +1,13 @@
+
+    <menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <group android:id="@+id/layout_group">
+			<item android:id="@+id/stripped"
+	    		android:title="@string/stripped" />
+    		<item android:id="@+id/minimalistic"
+        		android:title="@string/minimalistic" />
+    	</group>
+    	<item android:id="@+id/forum_home"
+    	    android:title="Forum home" />
+    	<item android:id="@+id/to_strip"
+    	    android:title="Strip it" />
+    </menu>

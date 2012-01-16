@@ -53,8 +53,14 @@ public class HelloWebViewActivity extends Activity
     	Log.i(Settings.TAG, "URL: " + url);
     	
     	AsyncTask<Void, String, File> fx = Settings.USE_XY ? new FilterX(url, view, this) : new FilterY(url, view, this);
-        // progressbar.setVisibility(ProgressBar.VISIBLE);
-    	fx.execute();
+        if(url.startsWith(Settings.FORUM) && Settings.STRIP)
+        {
+        	fx.execute();	// takes roughly ten times longer than just plain load!
+        }
+        else
+        {
+        	view.loadUrl(url);
+        }
 	}
 	
     /** Called when the activity is first created. */
@@ -145,6 +151,8 @@ public class HelloWebViewActivity extends Activity
         {
         	menu.findItem(R.id.stripped).setChecked(true);
         }
+        menu.findItem(R.id.to_strip).setCheckable(true);
+        menu.findItem(R.id.to_strip).setChecked(Settings.STRIP);
         return true;
     }
     @Override
@@ -159,6 +167,9 @@ public class HelloWebViewActivity extends Activity
         	case R.id.stripped:		Toast.makeText(this, R.string.stripped, Toast.LENGTH_SHORT).show();
         							Settings.USE_XY = false;
         							item.setChecked(true);
+        							break;
+        	case R.id.to_strip:		Settings.STRIP = !Settings.STRIP;
+        							item.setChecked(Settings.STRIP);
         							break;
         	case R.id.forum_home:	fetch(webview, Settings.FORUM);
         							break;

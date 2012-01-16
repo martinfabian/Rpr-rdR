@@ -9,6 +9,7 @@ import java.net.URL;
 public class Settings
 {
 	public static boolean USE_XY = false;	// false means use Y "stripped", true mens X "minimalistic"
+	public static boolean STRIP = true;	// false turns off stripping
 	
 	public static final String FORUM = "http://forum.cockos.com";
 	
