@@ -52,7 +52,7 @@ public class HelloWebViewActivity extends Activity
 	{
     	Log.i(Settings.TAG, "URL: " + url);
     	
-    	AsyncTask<Void, String, File> fx = Settings.USE_XY ? new FilterX(url, view, this) : new FilterY(url, view, this);
+    	AsyncTask<Void, String, File> fx = new FilterX(url, view, this);
         if(url.startsWith(Settings.FORUM) && Settings.STRIP)
         {
         	fx.execute();	// takes roughly ten times longer than just plain load!
