@@ -16,7 +16,7 @@
  * written and then parsed by webview
 
  */
-package my.fabian.webview;
+package my.fabian.rprrdr;
 
 import java.io.File;
 import java.io.FileOutputStream;

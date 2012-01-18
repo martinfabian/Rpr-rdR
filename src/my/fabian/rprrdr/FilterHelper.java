@@ -1,32 +1,18 @@
-package my.fabian.webview;
+/********************************** FilterHelper.java ****************************/
+package my.fabian.rprrdr;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.net.URI;
-
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.os.AsyncTask;
 import android.util.Log;
-import android.webkit.WebView;
 
 public abstract class FilterHelper
 {
 	public FilterHelper()
 	{
 		
-	}
-	
-	public HtmlStringBuilder manageProjectState(Document doc)
-	{
-		return new HtmlStringBuilder("Issue Tracker not supported yet, sorry...");
 	}
 	
 	public static String trim(String s, int width) 
@@ -41,7 +27,11 @@ public abstract class FilterHelper
 	public abstract HtmlStringBuilder manageTopState(Document doc);
 	public abstract HtmlStringBuilder manageThreadState(Document doc);
 	public abstract HtmlStringBuilder managePostState(Document doc);
-	
+	public HtmlStringBuilder manageProjectState(Document doc)
+	{
+		return new HtmlStringBuilder("Issue Tracker not supported yet, sorry...");
+	}
+		
 }
 
 class Minimalistic extends FilterHelper

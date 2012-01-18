@@ -2,7 +2,7 @@
 /*
  * Collects the settings
  */
-package my.fabian.webview;
+package my.fabian.rprrdr;
 
 import java.net.URL;
 

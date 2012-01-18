@@ -1,5 +1,5 @@
 /*********************************** HtmlStringBuilder.java ***************************/
-package my.fabian.webview;
+package my.fabian.rprrdr;
 
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.Document;
