@@ -32,7 +32,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.webkit.WebView;
 
-public class FilterX extends AsyncTask<Void, String, File>
+public class FilterX extends AsyncTask<Void, String, String>
 {
 	Activity the_activity = null;
 	String the_url = null;
@@ -58,19 +58,21 @@ public class FilterX extends AsyncTask<Void, String, File>
 		 * POSTS: On http://forum.cockos.com/showthread.php?t=xxxxx we should only show... what? Messages are embedded within <div id="post_message_xxxx"> </div> 
 		 * 																				Poster name is found within <div id="postmenu_xxx"> </div>
 		 */		
-		// If the url doesn't contain a FORUMTAG, THREADTAG or PROJECTTAG, then it is the TOP url (right?)
-		Settings.forum_state = Settings.FORUM_STATE.TOP;	
-		if(the_url.contains(Settings.FORUMTAG)) Settings.forum_state = Settings.FORUM_STATE.THREADS;
-		else if(the_url.contains(Settings.THREADTAG)) Settings.forum_state = Settings.FORUM_STATE.POSTS;
-		else if(the_url.contains(Settings.PROJECTTAG)) Settings.forum_state = Settings.FORUM_STATE.PROJECT;
-		
+		if(Settings.forum_state != Settings.FORUM_STATE.BYPASS)
+		{
+			// If the url doesn't contain a FORUMTAG, THREADTAG or PROJECTTAG, then it is the TOP url (right?)
+			Settings.forum_state = Settings.FORUM_STATE.TOP;	
+			if(the_url.contains(Settings.FORUMTAG)) Settings.forum_state = Settings.FORUM_STATE.THREADS;
+			else if(the_url.contains(Settings.THREADTAG)) Settings.forum_state = Settings.FORUM_STATE.POSTS;
+			else if(the_url.contains(Settings.PROJECTTAG)) Settings.forum_state = Settings.FORUM_STATE.PROJECT;
+		}
 		Log.i(Settings.TAG, "State: " + Settings.forum_state.toString());
 	}
 	
 	//@Override
 	protected void onPreExecute()
 	{
-		timing_all = System.currentTimeMillis();
+		new Measure("Timing all").Start();
 		
 		the_activity.setProgressBarIndeterminateVisibility(true);
 		
@@ -82,13 +84,17 @@ public class FilterX extends AsyncTask<Void, String, File>
 	}
 	
 	//@Override
-	protected File doInBackground(Void... v)
+	protected String doInBackground(Void... v)
 	{
+		Thread.currentThread().setName("FilterX");
+		// Log.i(Settings.TAG, "Thread priority: " + Thread.currentThread().getPriority());	// default seems to be 5
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		
 		try
 		{
 			Document doc = Jsoup.connect(the_url).get();
 			Log.i(Settings.TAG, "Title: " + doc.title());
-			publishProgress(doc.title());	// clever(?) hack here to set the app title
+			// publishProgress(doc.title());	// clever(?) hack here to set the app title
 
 			doc.outputSettings().prettyPrint(Settings.PRETTYPRINT);
 			
@@ -108,6 +114,9 @@ public class FilterX extends AsyncTask<Void, String, File>
 				case PROJECT:
 					builder = helper.manageProjectState(doc);
 					break;
+				case BYPASS:
+					builder = helper.bypassState(doc);
+					break;
 				default:
 					Log.e(Settings.TAG, "Switch error that cannot occur!");
 			}
@@ -117,15 +126,16 @@ public class FilterX extends AsyncTask<Void, String, File>
 			URI geller = new URI(the_url);	// using URI instead of URL because of hashCode (see http://www.eishay.com/2008/04/javas-url-little-secret.html)
 			int hashcode = geller.hashCode();
 	
-			timing_write = System.currentTimeMillis();
+			// timing_write = System.currentTimeMillis();
+			new Measure("Timing write").Start();
 			the_file = new File(the_activity.getExternalFilesDir(null), hashcode + ".html");
-			Log.i(Settings.TAG, "File name: " + getTheFile().getAbsolutePath());
+			Log.i(Settings.TAG, "File name: " + the_file.getAbsolutePath());
 			
 			OutputStream outStream = new FileOutputStream(the_file.getAbsolutePath());
 			outStream.write(builder.toString().getBytes());	        
 			outStream.close();
 			
-			return the_file;
+			return builder.toString();
 		}
         catch(Exception excp)
         {
@@ -136,20 +146,24 @@ public class FilterX extends AsyncTask<Void, String, File>
 
 
 	//@Override
-	protected void onPostExecute(File file)
+	protected void onPostExecute(final String string)
 	{
-		the_view.loadUrl("file://" + file.getAbsolutePath());
-		// the_bar.setVisibility(ProgressBar.GONE);
+		the_view.loadUrl("file://" + the_file.getAbsolutePath());
+		// the_view.loadDataWithBaseURL(Settings.FORUM, string, "text/html", "utf-8", "");
+		
 		the_dialog.hide();
 		the_dialog.cancel();
 		the_dialog = null;
 		
 		the_activity.setProgressBarIndeterminateVisibility(false);
 		
-		long time_now =  System.currentTimeMillis();
-		timing_all = time_now - timing_all;
-		timing_write = time_now - timing_write;
-		Log.i(Settings.TAG, "Timing all: " + timing_all + " Timing write: " + timing_write + " (ms)");
+		// long time_now =  System.currentTimeMillis();
+		// timing_all = time_now - timing_all;
+		// timing_write = time_now - timing_write;
+		Measure.StopAll();
+		StringBuilder b = Measure.getAll();
+		Log.i(Settings.TAG, b.append("(ms)").toString());
+		Measure.Clear();
 	}
 	
 	//@Override
@@ -159,9 +173,4 @@ public class FilterX extends AsyncTask<Void, String, File>
 											// http://stackoverflow.com/questions/3438276/change-title-bar-text-in-android)
 	}
 	
-	File getTheFile()
-	{
-		return the_file;
-	}
-
 }

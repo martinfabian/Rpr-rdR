@@ -27,6 +27,8 @@ public class HtmlStringBuilder
 	
 	public HtmlStringBuilder(Document doc)
 	{
+		Measure m = new Measure("Doc copy").Start();
+		
 		Element style = new Element(Tag.valueOf("style"), doc.baseUri());
 		style.attr("type", "text/css");
 		style.append(Settings.BODY + Settings.ALINK + Settings.AVISITED + Settings.TDTHPLI + Settings.ALT2 +
@@ -35,7 +37,10 @@ public class HtmlStringBuilder
 		Element head = doc.select("head").first();
 		head.select("style").remove();
 		head.appendChild(style);	
-		builder = new StringBuilder(doc.toString());
+
+		builder = new StringBuilder(doc.toString());	// Is this copy slow?
+		
+		m.Stop();
 	}
 	public HtmlStringBuilder append(final String str)
 	{
@@ -45,6 +50,8 @@ public class HtmlStringBuilder
 	
 	public HtmlStringBuilder insertTitle(final String title)
 	{
+		Measure m = new Measure("Insert title").Start();
+		
 		// find </head> and insert <title> before it
 		int index = builder .indexOf("</head>");
 		if(index != -1) // we found it
@@ -52,6 +59,9 @@ public class HtmlStringBuilder
 			final StringBuilder t = new StringBuilder("<title>").append(title).append("</title>");
 			builder.insert(index, t);
 		}
+		
+		m.Stop();
+		
 		return this;
 	}
 	

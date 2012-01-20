@@ -13,7 +13,7 @@ public class Settings
 	
 	public static final String FORUM = "http://forum.cockos.com";
 	
-	public static enum FORUM_STATE {TOP, THREADS, POSTS, PROJECT};
+	public static enum FORUM_STATE {TOP, THREADS, POSTS, PROJECT, BYPASS};	// BYPASS is only used for debugging/profiling
 	public static FORUM_STATE forum_state = FORUM_STATE.TOP;
 	
 	public static final String FORUMTAG = "forumdisplay";

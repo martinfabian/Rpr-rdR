@@ -31,7 +31,13 @@ public abstract class FilterHelper
 	{
 		return new HtmlStringBuilder("Issue Tracker not supported yet, sorry...");
 	}
+	
+	public HtmlStringBuilder bypassState(Document doc)
+	{
+		new Measure("Bypass").Start();
 		
+		return new HtmlStringBuilder(doc.toString());
+	}
 }
 
 class Minimalistic extends FilterHelper
@@ -73,7 +79,7 @@ class Minimalistic extends FilterHelper
 			// Log.i(Settings.TAG, threadlink.outerHtml());	// Why is the style="..." stripped?
 			org.jsoup.nodes.Element gg_parent = threadlink.parent().parent().parent();
 			org.jsoup.nodes.Element staticon = gg_parent.select("img[id*=statusicon").first();	// thread_hot_new.gif and thread_new.gif make style bold (workaround for Jsoup not recognizing the style attribute
-			Log.i(Settings.TAG, staticon.attr("src"));
+			// Log.i(Settings.TAG, staticon.attr("src"));
 			
 			builder.append("<tr><td width=\"90%\"><A HREF=\"").append(threadlink.attr("abs:href")).append("\" ");
 			
@@ -288,13 +294,13 @@ class Stripped extends FilterHelper
 		// Under div_posts, there's one div_align_center for every post
 		Elements posts = div_posts.select("div[align=center]").first().siblingElements();
 		posts.remove(posts.size()-1);
-		Log.i(Settings.TAG, "siblings: " + posts.size());
+		// Log.i(Settings.TAG, "siblings: " + posts.size());
 		for(Element post : posts)
 		{
 			post.select("div[class^=vbmenu]").remove();
 			// Now there's a single table with three tr siblings
 			Element table = post.select("table[id^=post]").first();
-			Log.i(Settings.TAG, table.id());
+			// Log.i(Settings.TAG, table.id());
 			Elements trs = table.select("tr").first().siblingElements();
 			assert(trs.size() == 3);
 			Element tr1 = trs.first();	// the head
