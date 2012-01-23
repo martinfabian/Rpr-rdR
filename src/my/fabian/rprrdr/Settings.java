@@ -8,6 +8,7 @@ import java.net.URL;
 
 public class Settings
 {
+	public static boolean ASYNC_TASK = true;	// fals emeans we run in the GUI thread
 	public static boolean USE_XY = false;	// false means use Y "stripped", true mens X "minimalistic"
 	public static boolean STRIP = true;	// false turns off stripping
 	
@@ -21,7 +22,8 @@ public class Settings
 	public static final String PROJECTTAG = "project";
 	public static final String POSTTAG = "<div id=\"post_message_";
 	
-	public static final String ERROR = "<html><body><h3>404 Not found</h3><BR>or some other silly error, sorry...<p style=\"font-size:60%\"><small><b>Rpr-rdR</B> by M Fabian 2011</p></body></html>";
+	public static final String ABOUT = "<p style=\"font-size:60%\"><small><b>Rpr-rdR</B> by M Fabian 2011</p>";
+	public static final String ERROR = "<html><body><h3>404 Not found</h3><BR>or some other silly error, sorry..." + ABOUT + "</body></html>";
 	
 	public static final boolean PRETTYPRINT = true;	// for document, set this to false for production code
 	public static final int TOPMAINTABLE = 6; // magic number 6 is the zero based index of the main table under the div, shoudl be kept
@@ -53,5 +55,6 @@ public class Settings
 	public static final String THEAD = ".thead{	background: #FFFFFF url(http://www.cockos.com/reaper/siteimages/forum-bg-grad.jpg) "
 								+ "repeat-x top left;color: #FFFFFF;font-size:" + FONTSIZE + ";font-weight: bold;}";
 
+	public static final String HOME_PAGE = "<html><body><img src=\"" + LOGO + "\" />" + ABOUT + "</body></html>";
 	public static final String TAG = "MF";
 }

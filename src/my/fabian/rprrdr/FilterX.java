@@ -76,17 +76,17 @@ public class FilterX extends AsyncTask<Void, String, String>
 		
 		the_activity.setProgressBarIndeterminateVisibility(true);
 		
-		the_dialog = new ProgressDialog(the_activity);
-		the_dialog.setMessage("Loading...");
-		the_dialog.setIndeterminate(true);
-		the_dialog.setCancelable(false);
-		the_dialog.show();
+//		the_dialog = new ProgressDialog(the_activity);
+//		the_dialog.setMessage("Loading...");
+//		the_dialog.setIndeterminate(true);
+//		the_dialog.setCancelable(false);
+//		the_dialog.show();
 	}
 	
 	//@Override
 	protected String doInBackground(Void... v)
 	{
-		Thread.currentThread().setName("FilterX");
+//		Thread.currentThread().setName("FilterX");
 		// Log.i(Settings.TAG, "Thread priority: " + Thread.currentThread().getPriority());	// default seems to be 5
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		
@@ -94,7 +94,7 @@ public class FilterX extends AsyncTask<Void, String, String>
 		{
 			Document doc = Jsoup.connect(the_url).get();
 			Log.i(Settings.TAG, "Title: " + doc.title());
-			// publishProgress(doc.title());	// clever(?) hack here to set the app title
+			publishProgress(doc.title());	// clever(?) hack here to set the app title
 
 			doc.outputSettings().prettyPrint(Settings.PRETTYPRINT);
 			
@@ -127,7 +127,7 @@ public class FilterX extends AsyncTask<Void, String, String>
 			int hashcode = geller.hashCode();
 	
 			// timing_write = System.currentTimeMillis();
-			new Measure("Timing write").Start();
+			new Measure("Write").Start();
 			the_file = new File(the_activity.getExternalFilesDir(null), hashcode + ".html");
 			Log.i(Settings.TAG, "File name: " + the_file.getAbsolutePath());
 			
@@ -148,15 +148,17 @@ public class FilterX extends AsyncTask<Void, String, String>
 	//@Override
 	protected void onPostExecute(final String string)
 	{
+		new Measure("Render").Start();
+		
 		the_view.loadUrl("file://" + the_file.getAbsolutePath());
 		// the_view.loadDataWithBaseURL(Settings.FORUM, string, "text/html", "utf-8", "");
 		
-		the_dialog.hide();
-		the_dialog.cancel();
-		the_dialog = null;
-		
+//		the_dialog.hide();
+//		the_dialog.cancel();
+//		the_dialog = null;
+//		
 		the_activity.setProgressBarIndeterminateVisibility(false);
-		
+//		
 		// long time_now =  System.currentTimeMillis();
 		// timing_all = time_now - timing_all;
 		// timing_write = time_now - timing_write;

@@ -10,4 +10,6 @@
     	    android:title="Forum home" />
     	<item android:id="@+id/to_strip"
     	    android:title="Strip it" />
+    	<item android:id="@+id/async_task"
+    	    android:title="AsyncTask" />
     </menu>

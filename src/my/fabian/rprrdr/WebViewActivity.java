@@ -53,17 +53,29 @@ public class WebViewActivity extends Activity
 	{
     	Log.i(Settings.TAG, "URL: " + url);
     	
-    	AsyncTask<Void, String, String> fx = new FilterX(url, view, this);
-    	// FilterX fx = new FilterX(url, view, this);	// use this when not running as AsyncTask
-    	
+
         if(url.startsWith(Settings.FORUM) && Settings.STRIP)
         {
-        	fx.execute();	// running as AsyncTask takes roughly ten times longer than just plain load!
-        	
-        	// Use these when not running as AsyncTask
-//        	fx.onPreExecute();
-//        	final String str = fx.doInBackground();
-//        	fx.onPostExecute(str);
+        	if(Settings.ASYNC_TASK)
+        	{
+        		//** Use these to run in the background as AsyncTask, slow
+        		AsyncTask<Void, String, String> fx = new FilterX(url, view, this);
+        		fx.execute();	// running as AsyncTask takes roughly ten times longer than just plain load!
+        	}
+        	else
+        	{
+                if (android.os.Build.VERSION.SDK_INT > 9) // see http://stackoverflow.com/questions/8706464/defaulthttpclient-to-androidhttpclient
+                {
+            		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            		StrictMode.setThreadPolicy(policy);
+            	}
+
+        		//** Use these when not running as AsyncTask, faster
+                FilterX fx = new FilterX(url, view, this);
+          		fx.onPreExecute();
+        		final String str = fx.doInBackground();
+        		fx.onPostExecute(str);
+        	}
         }
         else
         {
@@ -93,7 +105,9 @@ public class WebViewActivity extends Activity
         webview = (WebView) findViewById(R.id.webview);
         webview.setWebViewClient(new HelloWebViewClient());
         webview.setBackgroundColor(Settings.BGCOLOR);
-        webview.loadUrl(Settings.LOGO);
+        // webview.loadUrl(Settings.LOGO);
+        Toast.makeText(this,Settings.FORUM, Toast.LENGTH_LONG).show();
+        webview.loadData(Settings.HOME_PAGE, "text/html", "utf-8");
         
         fetch(webview, Settings.FORUM);
     }
@@ -154,14 +168,18 @@ public class WebViewActivity extends Activity
         menu.setGroupCheckable(R.id.layout_group, true, true);
         if(Settings.USE_XY)
         {
-        	menu.findItem(R.id.minimalistic).setChecked(true);	// DO NOT use getItem here, index an did are very different things!
+        	menu.findItem(R.id.minimalistic).setChecked(true);	// DO NOT use getItem here, index and id are very different things!
         }														// Some stupid f*** at google apparently had too much to think...
         else
         {
         	menu.findItem(R.id.stripped).setChecked(true);
         }
+        
         menu.findItem(R.id.to_strip).setCheckable(true);
         menu.findItem(R.id.to_strip).setChecked(Settings.STRIP);
+        menu.findItem(R.id.async_task).setCheckable(true);
+        menu.findItem(R.id.async_task).setChecked(Settings.ASYNC_TASK);
+        
         return true;
     }
     @Override
@@ -180,7 +198,11 @@ public class WebViewActivity extends Activity
         	case R.id.to_strip:		Settings.STRIP = !Settings.STRIP;
         							item.setChecked(Settings.STRIP);
         							break;
-        	case R.id.forum_home:	fetch(webview, Settings.FORUM);
+        	case R.id.forum_home:	Toast.makeText(this,Settings.FORUM, Toast.LENGTH_LONG).show();
+        							fetch(webview, Settings.FORUM);
+        							break;
+        	case R.id.async_task:	Settings.ASYNC_TASK = !Settings.ASYNC_TASK;
+        							item.setChecked(Settings.ASYNC_TASK);
         							break;
         }
 		
