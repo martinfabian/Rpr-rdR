@@ -1,0 +1,3 @@
+# Rpr-rdR
+Feeble attempt att re-formatting the Cockos' Reaper forum for easier reading on a mobile phone.
+This died, stumbling of inadequacies of Android 2. Maybe for Android 5 it could work...
